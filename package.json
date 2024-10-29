@@ -1,0 +1,15 @@
+{
+  "name": "mavawe",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node ./scripts/2csv.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "csv": "^6.3.10",
+    "heic-convert": "^2.1.0"
+  }
+}
