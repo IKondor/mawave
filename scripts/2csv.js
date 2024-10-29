@@ -1,140 +1,122 @@
-const fs = require("fs");
-const csv = require("csv");
-const convert = require("heic-convert");
-const { promisify } = require("util");
+const fs = require('fs');
+const csv = require('csv');
+const convert = require('heic-convert');
+const { promisify } = require('util');
+const { v4: get_uuid } = require('uuid');
 
-
-const itemTypes = [
-    {
-        id: 'маленькая',
-        cell: 2250
-    },
-    {
-        id: 'средняя',
-        cell: 2350
-    },
-    {
-        id: 'фигурная',
-        cell: 2350
-    },
-    {
-        id: 'большая',
-        cell: 2500
-    },
-    {
-        id: 'пивная',
-        cell: 2500
-    },
-    {
-        id: 'прочее',
-        cell: 'kek'
-    }
-]
-
-
-const result = [{
-    'SKU': 'SKU',
-    'Category': 'Category',
-    'Title': 'Title',
-    'Description': 'Description',
-    'Text': 'Text',
-    'Photo': 'Photo',
-    'Price': 'Price',
-    'Quantity': 'Quantity',
+const result = [
+  {
+    SKU: 'SKU',
+    Category: 'Category',
+    Title: 'Title',
+    Description: 'Description',
+    Text: 'Text',
+    Photo: 'Photo',
+    Price: 'Price',
+    Quantity: 'Quantity',
     'Price Old': 'Price Old',
-    'Editions': 'Editions',
-    'Modifications': 'Modifications',
+    Editions: 'Editions',
+    Modifications: 'Modifications',
     'External ID': 'External ID',
     'Parent UID': 'Parent UID',
-}]
-const endpoint = "output";
-const Description = 'Керамическая кружка ручной работы!';
-const Text = 'Вся проходят двойную обработку и подходят для мойки в посудомоечной машине и разогревания в микроволновой печи!'
+    'SEO keywords': 'SEO keywords',
+  },
+];
+const endpoint = 'archive/29.10.24';
+const Description = '';
+const Text = '';
+const SEO = 'Купить кружку, Купить посуду, заказать кружку, закзать посуду, купить кружку ручной работы';
 
 const dirs = fs.readdirSync(`${endpoint}`);
+const dir = 'archive/29.10.24';
 
-function convert2csv() {
-    for (let dir of dirs) {
-        const images = fs.readdirSync(`${endpoint}/${dir}`);
+const imagesToJoin = [];
 
-        for (let image of images) {
-            // if (image.match(".heic$")) continue;
-            // const path = `${endpoint}/${dir}/${image}`;
-            // const buffer = fs.readFileSync(path);
+async function convert2csv() {
+  const images = fs.readdirSync(dir);
 
-            // console.log("ready " + path);
+  for (let image of images) {
+    const tags = image
+      .replaceAll('.HEIC', '')
+      .split(',')
+      .map((tag) => {
+        const result = tag.replaceAll('"', '').replace(/^\s*/i, '').replace(/\s*$/i, '');
 
-            // const jpg = await convert({
-            //     buffer
-            
-            //     format: "JPEG",
-            //     quality: 1,
-            // });
-
-            // fs.writeFileSync(`${outputPrefix}${path}.jpeg`, jpg);
-            // delete buffer;
-            // console.log("write " + path);
-
-            const Category = itemTypes.filter(t => t.cell == dir)[0].id;
-
-            result.push({
-                SKU: `${Category}-${image}`.replace('.JPG.png.jpeg', ''),
-                Title: `${Category}-${image}`.replace('.JPG.png.jpeg', ''),
-                'External ID': image,
-                Category,
-                Description,
-                Text,
-                Photo: encodeURI(
-                    `https://ikondor.github.io/mawave/output/${dir}/${image}`
-                ),
-                Price: +dir,
-                'Price Old': +dir + 150
-            });
+        if (!result.length) {
+          return 'Без коллекции';
         }
-    }
-    // SKU;Category;Title;Description;Text;Photo;Price;Quantity;Price Old;Editions;Modifications;External ID;Parent UID
 
-    csv.stringify(result).pipe(fs.createWriteStream(`${__dirname}/output.csv`));
+        return result;
+      });
+
+    const Title = tags[0];
+    const Price = tags[1];
+    const Category = tags.slice(2, tags.length).join(';');
+    const id = get_uuid();
+
+    const path = `${dir}/${image}`;
+    const buffer = fs.readFileSync(path);
+    const newFileName = `${Title}:${Price}:${Category}:${id}`;
+    console.log('ready ' + newFileName);
+    const jpg = await convert({
+      buffer,
+      format: 'JPEG',
+      quality: 1,
+    });
+    fs.writeFileSync(`output/${newFileName}.jpeg`, jpg);
+    delete buffer;
+    console.log('write ' + newFileName);
+
+    result.push({
+      SKU: id,
+      Title,
+      'External ID': id,
+      Category,
+      Description,
+      Text,
+      Photo: encodeURI(`https://ikondor.github.io/mawave/output/${newFileName}.jpeg`),
+      Price,
+      'SEO keywords': SEO,
+    });
+  }
+
+  // SKU;Category;Title;Description;Text;Photo;Price;Quantity;Price Old;Editions;Modifications;External ID;Parent UID
+
+  csv.stringify(result).pipe(fs.createWriteStream(`${__dirname}/output.csv`));
 }
 
 convert2csv();
 
-
-
-
-
-
-
 async function convertHeic() {
-    if (!fs.existsSync(`${outputPrefix}${endpoint}`)) {
-        fs.mkdirSync(`${outputPrefix}${endpoint}`);
+  if (!fs.existsSync(`${outputPrefix}${endpoint}`)) {
+    fs.mkdirSync(`${outputPrefix}${endpoint}`);
+  }
+
+  for (let dir of dirs) {
+    const Category = dir.split(' ')[0];
+
+    const images = fs.readdirSync(`${endpoint}/${dir}`);
+
+    if (!fs.existsSync(`${outputPrefix}${endpoint}/${dir}`)) {
+      fs.mkdirSync(`${outputPrefix}${endpoint}/${dir}`);
     }
 
-    for (let dir of dirs) {
-        const Category = dir.split(" ")[0];
+    for (let image of images) {
+      if (!image.match('.heic$')) continue;
+      const path = `${endpoint}/${dir}/${image}`;
+      const buffer = fs.readFileSync(path);
 
-        const images = fs.readdirSync(`${endpoint}/${dir}`);
+      console.log('ready ' + path);
 
-        if (!fs.existsSync(`${outputPrefix}${endpoint}/${dir}`)) {
-            fs.mkdirSync(`${outputPrefix}${endpoint}/${dir}`);
-        }
+      const jpg = await convert({
+        buffer,
+        format: 'JPEG',
+        quality: 1,
+      });
 
-        for (let image of images) {
-            if (!image.match(".heic$")) continue;
-            const path = `${endpoint}/${dir}/${image}`;
-            const buffer = fs.readFileSync(path);
-
-            console.log("ready " + path);
-
-            const jpg = await convert({
-                buffer,
-                format: "JPEG",
-                quality: 1,
-            });
-
-            fs.writeFileSync(`${outputPrefix}${path}.jpeg`, jpg);
-            delete buffer;
-            console.log("write " + path);
-        }
+      fs.writeFileSync(`${outputPrefix}${path}.jpeg`, jpg);
+      delete buffer;
+      console.log('write ' + path);
     }
+  }
 }

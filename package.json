@@ -10,6 +10,7 @@
   "license": "ISC",
   "dependencies": {
     "csv": "^6.3.10",
-    "heic-convert": "^2.1.0"
+    "heic-convert": "^2.1.0",
+    "uuid": "^11.0.2"
   }
 }
