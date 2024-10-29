@@ -53,10 +53,10 @@ async function convert2csv() {
     const Price = tags[1];
     const Category = tags.slice(2, tags.length).join(';');
     const id = get_uuid();
+    const newFileName = `${Title}_${id}`;
 
     const path = `${dir}/${image}`;
     const buffer = fs.readFileSync(path);
-    const newFileName = `${Title}:${Price}:${Category}:${id}`;
     console.log('ready ' + newFileName);
     const jpg = await convert({
       buffer,
