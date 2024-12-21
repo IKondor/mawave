@@ -2,7 +2,6 @@
 
 const fs = require('fs');
 const csv = require('csv');
-const convert = require('heic-convert');
 const { v4: get_uuid } = require('uuid');
 
 const data = { inputPath: process.argv[2], outputPath: process.argv[3] };
@@ -42,7 +41,7 @@ async function convert2csv({ inputPath, outputPath }) {
     Скай: '#8b93a5',
     'Топлёное молоко': '#cdb684',
     Охра: '#ccc6a4',
-    'Коричнева черепаха': '#6d523d',
+    'Коричневая черепаха': '#6d523d',
     'Голубое небо': '#a1b6bd',
     Джипси: '#1e2c8c',
     'Черный брутальный': '#37372c',
@@ -64,10 +63,18 @@ async function convert2csv({ inputPath, outputPath }) {
     зодиак: 'Знаки зодиака',
   };
 
+  const typeDict = {
+    груша: 'Груша 300мл',
+    фундук: 'Фундук 300мл',
+    цилиндр: 'Цилиндр 400мл',
+    конус: 'Конус 500мл',
+  };
+
   const images = fs.readdirSync(inputPath);
 
   for (let image of images) {
     const tags = image.split(',').map((tag) => tag.trim());
+    tags[4] = tags[4].split('.')[0].trim() || 'Голубое небо';
 
     console.log({ tags });
     const Title = tags[0];
@@ -76,8 +83,8 @@ async function convert2csv({ inputPath, outputPath }) {
       .split(' ')
       .map((c) => categoryDict[c])
       .join(';');
-    const type = tags[3] || 'Фундук';
-    const color = tags[4] || 'Голубое небо';
+    const type = typeDict[tags[3] || 'фундук'];
+    const color = tags[4];
     const id = get_uuid();
     const newFileName = `${id}`;
 
