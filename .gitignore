@@ -3,3 +3,10 @@ archive/
 processing/
 png/
 origin/
+templates/
+csv/
+
+.yarn/
+!.yarn/releases/*
+
+env/

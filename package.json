@@ -4,7 +4,11 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "node ./scripts/2csv.js"
+    "start": "node scripts/2csv.js",
+    "convert_heic": "scripts/convert_heic_to_jpeg.js data/archive/21.12.24/sale data/processing",
+    "make_csv": "scripts/make_csv.js data/processing data/csv",
+    "update_rules": "chmod +x scripts/*.js",
+    "clean_output": "rm -rf data/output"
   },
   "author": "",
   "license": "ISC",
@@ -12,5 +16,6 @@
     "csv": "^6.3.10",
     "heic-convert": "^2.1.0",
     "uuid": "^11.0.2"
-  }
+  },
+  "packageManager": "yarn@4.5.3"
 }
